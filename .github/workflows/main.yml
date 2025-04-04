@@ -1,22 +1,30 @@
-name: Windows - LiteManager
+name: Windows - RDP via Playit
 
 on:
   workflow_dispatch:
 
 jobs:
-  build:
-    name: Start Building...
+  connect:
     runs-on: windows-latest
-    timeout-minutes: 999999999999999999999999999999999
-    
+    timeout-minutes: 9999
+
     steps:
-      - name: Downloading & Installing Essentials
+      - name: ✅ تفعيل RDP
         run: |
-          Invoke-WebRequest -Uri "https://gitlab.com/chamod12/lm_win-10_github_rdp/-/raw/main/Downloads.bat" -OutFile "Downloads.bat"
-          cmd /c Downloads.bat
+          Set-ItemProperty -Path "HKLM:\System\CurrentControlSet\Control\Terminal Server" -Name "fDenyTSConnections" -Value 0
+          Enable-NetFirewallRule -DisplayGroup "Remote Desktop"
 
-      - name: Connect to LiteManager
-        run: cmd /c show.bat
+      - name: 📥 تحميل Playit Agent
+        run: |
+          Invoke-WebRequest -Uri "https://github.com/playit-cloud/playit-agent/releases/latest/download/playit-windows.exe" -OutFile "playit.exe"
+          Invoke-WebRequest -Uri "https://yourdomain.com/playit.toml" -OutFile "playit.toml"
 
-      - name: Time Counter
-        run: cmd /c loop.bat
+      - name: 🚀 تشغيل Playit
+        run: ./playit.exe serve --config playit.toml
+
+      - name: 🕒 إبقاء الجهاز يعمل
+        run: |
+          echo :loop > loop.bat
+          echo timeout /t 60 >> loop.bat
+          echo goto loop >> loop.bat
+          cmd /c loop.bat
